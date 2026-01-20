@@ -36,8 +36,8 @@ TAMIZAJE_COLON = ["SANGRE OCULTA EN MATERIA FECAL GUAYACO O EQUIVALENTE"]
 
 def unificacion_facturacion():
     files = []
-    for i in range(1, 4):
-        path = Path(f'Facturacion/2018/{i}.csv')
+    for i in range(1, 5):
+        path = Path(f'Facturacion/2019/{i}.csv')
         if path.exists():
             try:
                 files.append(pd.read_csv(path))
@@ -47,13 +47,13 @@ def unificacion_facturacion():
             print(f'Warning: {path} not found, skipping.')
 
     if not files:
-        print('No Facturacion files found for 2018.')
+        print('No Facturacion files found for 2019.')
         return
 
     df_facturacion_consolidado = pd.concat(files, ignore_index=True)
     print(df_facturacion_consolidado.head())
 
-    df_facturacion_consolidado.to_csv('Facturacion/2018/Facturacion_Consolidado_2018.csv', index=False)
+    df_facturacion_consolidado.to_csv('Facturacion/2019/Facturacion_Consolidado_2019.csv', index=False)
 
 def unificacion_produccion():
     df_produccion = pd.read_excel('Produccion/Informe_Produccion.xlsx')
@@ -91,7 +91,7 @@ def calcular_denominadores(df,binsc = None, labelsc= None, genero=None):
 
 def encontrados_con_ebs():
 
-    df_facturacion = pd.read_csv('Facturacion/2018/Facturacion_Consolidado_2018.csv')
+    df_facturacion = pd.read_csv('Facturacion/2019/Facturacion_Consolidado_2019.csv')
 
     df_filtrado = df_facturacion[
         ['Identificacion', 'Servicio', 'CodProce', 'programa', 'CodDiag', 'Fecha_Servicio', 'Edad','Sexo']]
@@ -112,7 +112,7 @@ def encontrados_con_ebs():
 
     cobertura_atencion, _ = valores_por_servicio(df_filtrado, COBERTURA_ATENCION, bins=bins_curso_vida, labels=labels_curso_vida)
     cobertura_personas , _ = valores_por_servicio(df_filtrado, COBERTURA_SALUD_BUCAL, bins=bins_curso_vida, labels=labels_curso_vida)
-    cobertura_agudeza_visual, _ = valores_por_servicio(df_filtrado, ['MEDICION DE AGUDEZA VISUAL RIAS'],None ,bins=bins_curso_vida, labels=labels_curso_vida) #"890201"
+    cobertura_agudeza_visual, _ = valores_por_servicio(df_filtrado, None,890201 ,bins=bins_curso_vida, labels=labels_curso_vida) #"890201"
     tamizadas_cancer_cuello_uterino, _ = valores_por_servicio(df_filtrado, TAMIZAJE_CUELLO,None, rango_edad=(25, 65), sexo='F', bins=bins_cuello_uterino, labels=labels_cuello_uterino)
     tamizaje_cancer_mama, _  = valores_por_servicio(df_filtrado, None, None, rango_edad=(50, 69), sexo='F', bins=bins_mama, labels=labels_mama)
     tamizajes_cancer_colon, _  = valores_por_servicio(df_filtrado, TAMIZAJE_COLON, rango_edad=(50, 75), bins=[50, 75], labels=['50-75'])
