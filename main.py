@@ -36,24 +36,24 @@ TAMIZAJE_COLON = ["SANGRE OCULTA EN MATERIA FECAL GUAYACO O EQUIVALENTE"]
 
 def unificacion_facturacion():
     files = []
-    for i in range(1, 5):
-        path = Path(f'Facturacion/2019/{i}.csv')
+    for i in range(1, 4):
+        path = Path(f'Facturacion/2020/{i}.csv')
         if path.exists():
             try:
-                files.append(pd.read_csv(path))
+                files.append(pd.read_csv(path, sep=','))
             except Exception as e:
                 print(f'Failed to read {path}: {e}')
         else:
             print(f'Warning: {path} not found, skipping.')
 
     if not files:
-        print('No Facturacion files found for 2019.')
+        print('No Facturacion files found for 2020.')
         return
 
     df_facturacion_consolidado = pd.concat(files, ignore_index=True)
     print(df_facturacion_consolidado.head())
 
-    df_facturacion_consolidado.to_csv('Facturacion/2019/Facturacion_Consolidado_2019.csv', index=False)
+    df_facturacion_consolidado.to_csv('Facturacion/2020/Facturacion_Consolidado_2020.csv', index=False)
 
 def unificacion_produccion():
     df_produccion = pd.read_excel('Produccion/Informe_Produccion.xlsx')
@@ -91,7 +91,7 @@ def calcular_denominadores(df,binsc = None, labelsc= None, genero=None):
 
 def encontrados_con_ebs():
 
-    df_facturacion = pd.read_csv('Facturacion/2019/Facturacion_Consolidado_2019.csv')
+    df_facturacion = pd.read_csv('Facturacion/2020/Facturacion_Consolidado_2020.csv')
 
     df_filtrado = df_facturacion[
         ['Identificacion', 'Servicio', 'CodProce', 'programa', 'CodDiag', 'Fecha_Servicio', 'Edad','Sexo']]
@@ -254,8 +254,8 @@ def valores_por_servicio (df, servicio=None, codigo_proce=None, rango_edad=None,
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    #unificacion_facturacion()
-    encontrados_con_ebs()
+    unificacion_facturacion()
+    #encontrados_con_ebs()
     #unificacion_produccion()
 
 
