@@ -89,8 +89,8 @@ def detect_and_read(path: Path):
 
 def unificacion_facturacion():
     files = []
-    for i in range(1, 4):
-        path = Path(f'Facturacion/2021/{i}.csv')
+    for i in range(1, 5):
+        path = Path(f'Facturacion/2023/{i}.csv')
         if path.exists():
             try:
                 files.append(pd.read_csv(path))
@@ -100,13 +100,13 @@ def unificacion_facturacion():
             print(f'Warning: {path} not found, skipping.')
 
     if not files:
-        print('No Facturacion files found for 2021.')
+        print('No Facturacion files found for 2023.')
         return
 
     df_facturacion_consolidado = pd.concat(files, ignore_index=True)
     print(df_facturacion_consolidado.head())
 
-    df_facturacion_consolidado.to_csv('Facturacion/2021/Facturacion_Consolidado_2021.csv', index=False)
+    df_facturacion_consolidado.to_csv('Facturacion/2023/Facturacion_Consolidado_2023.csv', index=False)
 
 def unificacion_produccion():
     df_produccion = pd.read_excel('Produccion/Informe_Produccion.xlsx')
@@ -144,7 +144,7 @@ def calcular_denominadores(df,binsc = None, labelsc= None, genero=None):
 
 def encontrados_con_ebs():
 
-    df_facturacion = pd.read_csv('Facturacion/2021/Facturacion_Consolidado_2021.csv')
+    df_facturacion = pd.read_csv('Facturacion/2023/Facturacion_Consolidado_2023.csv')
 
     df_filtrado = df_facturacion[
         ['Identificacion', 'Servicio', 'CodProce', 'programa', 'CodDiag', 'Fecha_Servicio', 'Edad','Sexo']]
