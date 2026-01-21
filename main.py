@@ -1,4 +1,5 @@
 # This is a sample Python script.
+import csv
 from pathlib import Path
 
 import pandas as pd
@@ -32,25 +33,69 @@ TAMIZAJE_CUELLO = [
     "ESTUDIO ANATOMOPATOLOGICO BASICO EN CITOLOGIA CERVICOVAGINAL MANUAL"]
 
 TAMIZAJE_COLON = ["SANGRE OCULTA EN MATERIA FECAL GUAYACO O EQUIVALENTE"]
+def detect_and_read(path: Path):
+    # 1) detect delimiter
+    sample = path.read_bytes()[:8192].decode('utf-8', errors='replace')
+    try:
+        dialect = csv.Sniffer().sniff(sample, delimiters=[',',';','\t','|'])
+        sep = dialect.delimiter
+    except Exception:
+        sep = ','
 
+    print(f"Detected delimiter: {sep!r}")
+
+    # 2) try tolerant read with python engine (no low_memory) and warn on bad lines
+    try:
+        df = pd.read_csv(path, sep=sep, engine='python', on_bad_lines='warn', encoding='utf-8')
+        print("Read OK (initial attempt). Rows:", len(df))
+        return df
+    except Exception as e:
+        print("Initial read failed:", e)
+
+    # 3) determine expected field count from header (using detected sep)
+    with path.open('r', encoding='utf-8', errors='replace') as f:
+        first_line = f.readline().rstrip('\n\r')
+    expected = len(first_line.split(sep))
+    print("Expected fields (from header):", expected)
+
+    # 4) scan file to find bad lines (counts != expected)
+    bad = []
+    with path.open('r', encoding='utf-8', errors='replace') as f:
+        reader = csv.reader(f, delimiter=sep)
+        for i, row in enumerate(reader, start=1):
+            if len(row) != expected:
+                bad.append((i, len(row), row))
+    print("Problematic lines found:", len(bad))
+    if bad:
+        for ln, cnt, _ in bad[:5]:
+            print("line", ln, "fields:", cnt)
+
+    # 5) simple auto-repair: if row has more fields, merge extras into last column
+    cleaned = path.with_name(path.stem + '_cleaned' + path.suffix)
+    with path.open('r', encoding='utf-8', errors='replace') as fin, cleaned.open('w', encoding='utf-8', newline='') as fout:
+        reader = csv.reader(fin, delimiter=sep)
+        writer = csv.writer(fout, delimiter=sep)
+        for row in reader:
+            if len(row) > expected:
+                row = row[:expected-1] + [sep.join(row[expected-1:])]
+            elif len(row) < expected:
+                row = row + [''] * (expected - len(row))
+            writer.writerow(row)
+
+    print("Wrote cleaned file to", cleaned)
+    df = pd.read_csv(cleaned, sep=sep, engine='python', encoding='utf-8')
+    print("Read cleaned file. Rows:", len(df))
+    return df
 
 def unificacion_facturacion():
-    files = []
-    for i in range(1, 4):
-        path = Path(f'Facturacion/2020/{i}.csv')
-        if path.exists():
-            try:
-                files.append(pd.read_csv(path, sep=','))
-            except Exception as e:
-                print(f'Failed to read {path}: {e}')
-        else:
-            print(f'Warning: {path} not found, skipping.')
 
-    if not files:
-        print('No Facturacion files found for 2020.')
-        return
+    #df_2020_01 = pd.read_csv('Facturacion/2020/2020-1.csv')
+    df_2020_01 = detect_and_read(Path(r'Facturacion/2020/2020-1.csv'))
+    df_2020_02 = pd.read_excel('Facturacion/2020/2020-2-1.xlsx')
+    df_2020_03 = pd.read_excel('Facturacion/2020/2020-2-2.xlsx')
 
-    df_facturacion_consolidado = pd.concat(files, ignore_index=True)
+    df_facturacion_consolidado = pd.concat(
+    [df_2020_01,df_2020_02,df_2020_03], ignore_index=True)
     print(df_facturacion_consolidado.head())
 
     df_facturacion_consolidado.to_csv('Facturacion/2020/Facturacion_Consolidado_2020.csv', index=False)
@@ -254,8 +299,8 @@ def valores_por_servicio (df, servicio=None, codigo_proce=None, rango_edad=None,
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    unificacion_facturacion()
-    #encontrados_con_ebs()
+    #unificacion_facturacion()
+    encontrados_con_ebs()
     #unificacion_produccion()
 
 
