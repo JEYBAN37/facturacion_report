@@ -88,17 +88,25 @@ def detect_and_read(path: Path):
     return df
 
 def unificacion_facturacion():
+    files = []
+    for i in range(1, 4):
+        path = Path(f'Facturacion/2021/{i}.csv')
+        if path.exists():
+            try:
+                files.append(pd.read_csv(path))
+            except Exception as e:
+                print(f'Failed to read {path}: {e}')
+        else:
+            print(f'Warning: {path} not found, skipping.')
 
-    #df_2020_01 = pd.read_csv('Facturacion/2020/2020-1.csv')
-    df_2020_01 = detect_and_read(Path(r'Facturacion/2020/2020-1.csv'))
-    df_2020_02 = pd.read_excel('Facturacion/2020/2020-2-1.xlsx')
-    df_2020_03 = pd.read_excel('Facturacion/2020/2020-2-2.xlsx')
+    if not files:
+        print('No Facturacion files found for 2021.')
+        return
 
-    df_facturacion_consolidado = pd.concat(
-    [df_2020_01,df_2020_02,df_2020_03], ignore_index=True)
+    df_facturacion_consolidado = pd.concat(files, ignore_index=True)
     print(df_facturacion_consolidado.head())
 
-    df_facturacion_consolidado.to_csv('Facturacion/2020/Facturacion_Consolidado_2020.csv', index=False)
+    df_facturacion_consolidado.to_csv('Facturacion/2021/Facturacion_Consolidado_2021.csv', index=False)
 
 def unificacion_produccion():
     df_produccion = pd.read_excel('Produccion/Informe_Produccion.xlsx')
@@ -136,7 +144,7 @@ def calcular_denominadores(df,binsc = None, labelsc= None, genero=None):
 
 def encontrados_con_ebs():
 
-    df_facturacion = pd.read_csv('Facturacion/2020/Facturacion_Consolidado_2020.csv')
+    df_facturacion = pd.read_csv('Facturacion/2021/Facturacion_Consolidado_2021.csv')
 
     df_filtrado = df_facturacion[
         ['Identificacion', 'Servicio', 'CodProce', 'programa', 'CodDiag', 'Fecha_Servicio', 'Edad','Sexo']]
